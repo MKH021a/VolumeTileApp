@@ -1,260 +1,126 @@
 package com.example.volumetile;
 
+import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowInsets;
-import android.view.WindowInsetsController;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.SeekBar;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.Toast;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
-import android.content.res.ColorStateList;
-import android.os.Build;
+import android.widget.*;
 
 public class MainActivity extends Activity {
-
     private AudioManager audioManager;
     private SeekBar volumeSeekBar;
     private TextView percentText;
+    private ImageView speakerIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         hideSystemBars();
-
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER_HORIZONTAL);
         rootLayout.setPadding(48, 70, 48, 36);
+        rootLayout.setBackgroundColor(Color.parseColor("#020617")); // دارک ساده
 
-        GradientDrawable background = new GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{
-                        Color.parseColor("#020617"),
-                        Color.parseColor("#0F172A"),
-                        Color.parseColor("#1E293B")
-                }
-        );
+        // عنوان
+        TextView title = new TextView(this);
+        title.setText("Volume Control");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(24);
+        rootLayout.addView(title);
 
-        rootLayout.setBackground(background);
-
-        TextView titleText = new TextView(this);
-        titleText.setText("Volume Control");
-        titleText.setTextColor(Color.WHITE);
-        titleText.setTextSize(28);
-        titleText.setTypeface(Typeface.DEFAULT_BOLD);
-        titleText.setGravity(Gravity.CENTER);
-
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        titleParams.setMargins(0, 0, 0, 36);
-        rootLayout.addView(titleText, titleParams);
-
-        ImageView speakerIcon = new ImageView(this);
+        // آیکون بلندگو
+        speakerIcon = new ImageView(this);
         speakerIcon.setImageResource(R.drawable.ic_volume_up);
-        speakerIcon.setColorFilter(Color.WHITE);
-
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(120, 120);
-        iconParams.setMargins(0, 0, 0, 28);
+        speakerIcon.setColorFilter(Color.parseColor("#60A5FA")); // رنگ آبی اولیه
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(150, 150);
+        iconParams.setMargins(0, 50, 0, 50);
         rootLayout.addView(speakerIcon, iconParams);
+
+        // SeekBar با افکت Glow
+        volumeSeekBar = new SeekBar(this);
+        volumeSeekBar.setMax(audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        volumeSeekBar.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
+        // افکت Glow با استفاده از رنگ روشن‌تر
+        volumeSeekBar.getProgressDrawable().setColorFilter(Color.parseColor("#3B82F6"), PorterDuff.Mode.SRC_IN);
+        volumeSeekBar.getThumb().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        rootLayout.addView(volumeSeekBar);
 
         percentText = new TextView(this);
         percentText.setTextColor(Color.WHITE);
-        percentText.setTextSize(22);
-        percentText.setTypeface(Typeface.DEFAULT_BOLD);
-        percentText.setGravity(Gravity.CENTER);
+        percentText.setTextSize(20);
+        rootLayout.addView(percentText);
 
-        LinearLayout.LayoutParams percentParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        percentParams.setMargins(0, 0, 0, 22);
-        rootLayout.addView(percentText, percentParams);
+        // دکمه‌ها
+        LinearLayout btnLayout = new LinearLayout(this);
+        btnLayout.setGravity(Gravity.CENTER);
+        btnLayout.setPadding(0, 50, 0, 0);
+        
+        Button btnDown = new Button(this); btnDown.setText("-");
+        Button btnUp = new Button(this); btnUp.setText("+");
+        btnLayout.addView(btnDown); btnLayout.addView(btnUp);
+        rootLayout.addView(btnLayout);
 
-        volumeSeekBar = new SeekBar(this);
-
-        if (audioManager != null) {
-            volumeSeekBar.setMax(audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
-            volumeSeekBar.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            volumeSeekBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#60A5FA")));
-            volumeSeekBar.setThumbTintList(ColorStateList.valueOf(Color.WHITE));
-        }
-
-        LinearLayout.LayoutParams seekParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        seekParams.setMargins(0, 0, 0, 36);
-        rootLayout.addView(volumeSeekBar, seekParams);
-
-        LinearLayout buttonLayout = new LinearLayout(this);
-        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(Gravity.CENTER);
-
-        Button downButton = new Button(this);
-        downButton.setText("-");
-
-        Button upButton = new Button(this);
-        upButton.setText("+");
-
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(160, 120);
-        buttonParams.setMargins(16, 0, 16, 0);
-
-        buttonLayout.addView(downButton, buttonParams);
-        buttonLayout.addView(upButton, buttonParams);
-
-        rootLayout.addView(buttonLayout);
-
+        // تنظیمات Produced by MKH
         View spacer = new View(this);
-        LinearLayout.LayoutParams spacerParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-        );
-        rootLayout.addView(spacer, spacerParams);
-
-        TextView producedBy = new TextView(this);
-        producedBy.setText("Produced by MKH");
-        producedBy.setTextColor(Color.parseColor("#CBD5E1"));
-        producedBy.setTextSize(15);
-        producedBy.setGravity(Gravity.CENTER);
-        producedBy.setTypeface(Typeface.DEFAULT_BOLD);
-        producedBy.setClickable(true);
-
-        producedBy.setOnClickListener(v -> showToast());
-
-        rootLayout.addView(producedBy);
+        rootLayout.addView(spacer, new LinearLayout.LayoutParams(0, 0, 1f));
+        TextView footer = new TextView(this);
+        footer.setText("Produced by MKH");
+        footer.setTextColor(Color.GRAY);
+        footer.setOnClickListener(v -> showMkhToast());
+        rootLayout.addView(footer);
 
         setContentView(rootLayout);
+        updateUI();
 
-        updatePercentText();
-
+        // عملیات صدا با انیمیشن
         volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && audioManager != null) {
-                    audioManager.setStreamVolume(
-                            AudioManager.STREAM_MUSIC,
-                            progress,
-                            AudioManager.FLAG_SHOW_UI
-                    );
-                    updatePercentText();
+            public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
+                if(fromUser) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, p, AudioManager.FLAG_SHOW_UI);
+                    playWaveAnimation();
+                    updateUI();
                 }
             }
-
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        downButton.setOnClickListener(v -> {
-            if (audioManager != null) {
-                audioManager.adjustStreamVolume(
-                        AudioManager.STREAM_MUSIC,
-                        AudioManager.ADJUST_LOWER,
-                        AudioManager.FLAG_SHOW_UI
-                );
-                refreshVolumeBar();
-            }
-        });
-
-        upButton.setOnClickListener(v -> {
-            if (audioManager != null) {
-                audioManager.adjustStreamVolume(
-                        AudioManager.STREAM_MUSIC,
-                        AudioManager.ADJUST_RAISE,
-                        AudioManager.FLAG_SHOW_UI
-                );
-                refreshVolumeBar();
-            }
+            public void onStartTrackingTouch(SeekBar s) {}
+            public void onStopTrackingTouch(SeekBar s) {}
         });
     }
 
-    private void showToast() {
-        TextView t = new TextView(this);
-        t.setText("MKH");
-        t.setTextColor(Color.WHITE);
-        t.setTextSize(22);
-        t.setGravity(Gravity.CENTER);
-        t.setPadding(60,40,60,40);
+    private void playWaveAnimation() {
+        // انیمیشن کوچک و بزرگ شدن آیکون (حس موج صدا)
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(speakerIcon, "scaleX", 1f, 1.2f, 1f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(speakerIcon, "scaleY", 1f, 1.2f, 1f);
+        scaleX.setDuration(200);
+        scaleY.setDuration(200);
+        scaleX.start();
+        scaleY.start();
+    }
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#CC0F172A"));
-        bg.setCornerRadius(30);
+    private void updateUI() {
+        int current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        percentText.setText((current * 100 / max) + "%");
+    }
 
-        t.setBackground(bg);
-
-        Toast toast = new Toast(getApplicationContext());
-        toast.setView(t);
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.setDuration(Toast.LENGTH_SHORT);
+    private void showMkhToast() {
+        Toast toast = Toast.makeText(this, "MKH", Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }
 
     private void hideSystemBars() {
-
-        Window window = getWindow();
-
-        window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-            window.setDecorFitsSystemWindows(false);
-
-            WindowInsetsController controller = window.getInsetsController();
-
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars());
-            }
-
-        } else {
-
-            window.getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_FULLSCREEN
-            );
-        }
-    }
-
-    private void refreshVolumeBar() {
-
-        if (audioManager != null && volumeSeekBar != null) {
-
-            volumeSeekBar.setProgress(
-                    audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            );
-
-            updatePercentText();
-        }
-    }
-
-    private void updatePercentText() {
-
-        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-
-        int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-
-        int percent = Math.round((currentVolume * 100f) / maxVolume);
-
-        percentText.setText(percent + "%");
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }
