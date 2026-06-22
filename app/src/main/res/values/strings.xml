@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Volume Tile App</string>
+    <string name="volume_up_tile">Volume Up</string>
+    <string name="volume_down_tile">Volume Down</string>
+</resources>
